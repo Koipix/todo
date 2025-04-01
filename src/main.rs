@@ -8,6 +8,7 @@ fn main() {
 
     match args[1].as_str() {
         "add" if args.len() > 2 => add_task(args[2..].join(" ")),
+        "list" => list_task(),
         _ => eprint!("Usage: todo add <task> or 'todo' to show list"),
     }
 }
@@ -34,4 +35,19 @@ fn add_task(task: String) {
 
     writeln!(file, "{} {}", task_count, task)
         .expect(msg);
+}
+
+fn list_task() {
+    let dir_path = home_dir().unwrap().join(".todo/");
+    let path = &dir_path.join("todos.txt");
+
+    let content = read_to_string(&path).unwrap_or_else(|_| String::new());
+
+    if !content.is_empty() {
+        for i in content.lines() {
+            println!("{}", i);
+        }
+    } else {
+        println!("No tasks to display");
+    }
 }
