@@ -1,5 +1,5 @@
 use std::env;
-use std::io::Write;
+use std::io::{ self, Write };
 use std::fs::{ self, OpenOptions, read_to_string };
 use dirs::home_dir;
 use owo_colors::OwoColorize;
@@ -10,7 +10,7 @@ pub fn main() {
     match args[1].as_str() {
         "add" if args.len() > 2 => add_task(args[2..].join(" ")),
         "done" if args.len() > 2 => {
-            if let Ok(index) = args[2].parse::<u8>() {
+            if let Ok(index) = args[2].parse::<usize>() {
                 finish_task(index);
             } else {
                 println!("Invalid task index: {}", args[2]);
@@ -47,19 +47,40 @@ pub fn add_task(task: String) {
         .expect(msg);
 }
 
-pub fn finish_task(index: u8) {
+pub fn finish_task(index: usize) {
     let dir_path = home_dir().unwrap().join(".todo/");
     let path = &dir_path.join("todos.txt");
 
-    let content = read_to_string(&path).unwrap_or_else(|_| String::new());
+    let content = read_to_string(&path)
+        .expect("Failed to read file");
 
-    if !content.is_empty() {
-        for (idx, task) in content.lines().enumerate() {
-            if (idx + 1) as u8 == index {
+    let mut lines: Vec<String> = content.lines().map(|line| line.to_string()).collect();
 
-            }
-        }
+    if index < lines.len() {
+        let task = &mut lines[index - 1];
+
+        if task.starts_with("*") {
+            task.replace_range(0..1, "-");
+        } else if task.starts_with("-"){
+            task.replace_range(0..1, "*");
+        }        
     }
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true) 
+        .open(path)
+        .expect("Failed to open file");
+
+    for line in lines {
+        writeln!(file, "{}", line)
+            .expect("Failed to update task");
+    }
+
+    file.flush()
+        .expect("flush err");
+
+    list_task();
 }
 
 pub fn list_task() {
