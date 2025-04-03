@@ -72,7 +72,11 @@ pub fn list_task() {
         for (i, line) in content.lines().enumerate() {
             let (status, task) = line.split_at(2);
 
-            println!("{} {}", i + 1, task);
+            if status == "* " {
+                println!("{} {}", i + 1, task);
+            } else {
+                println!("{} {}", i + 1, task.strikethrough());
+            }
         }
     } else {
         println!("No tasks to display");
